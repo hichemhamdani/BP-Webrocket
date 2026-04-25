@@ -66,11 +66,20 @@ sur SiteGround à chaque push sur la branche `dev`.
 | `SSH_PRIVATE_KEY` | Clé privée SSH (générée sur ta machine) |
 | `GH_TOKEN` | GitHub Personal Access Token (permission `repo`) |
 
-**2. Générer une clé SSH dédiée** (sur ta machine) :
-```bash
-ssh-keygen -t ed25519 -C "webrocket-siteground" -f ~/.ssh/nom-projet-sg -N ""
-```
-→ Ajouter la clé publique dans SiteGround : Site Tools → Devs → SSH Keys Manager
+**2. Autoriser la clé SSH sur SiteGround**
+
+> **Important** : sur SiteGround, les clés SSH sont **par site**, pas par compte.
+> Chaque site a son propre SSH Keys Manager dans son Site Tools.
+> Une clé autorisée sur `site-a.roxy.cloud` ne donne pas accès à `site-b.roxy.cloud`.
+
+Chez Webrocket on utilise une seule clé privée (`webrocket_sg`) pour tous les projets.
+Il suffit de l'autoriser dans chaque nouveau site :
+
+1. Aller dans **Site Tools du nouveau site** → Devs → SSH Keys Manager
+2. Cliquer **Create/Import → Import**
+3. Coller la clé publique `webrocket_sg`
+4. Cliquer **Authorize**
+5. Récupérer les credentials SSH de ce site (host, username, port) dans Site Tools → Devs → SSH
 
 **3. Initialiser Git sur SiteGround** (une seule fois via SSH) :
 ```bash
