@@ -99,7 +99,7 @@ modifié dans les sessions précédentes. Si tu viens de cloner le projet ou de 
 après une pause, commence ta session par cette commande :
 
 ```
-Lis les 20 derniers commits git et résume ce qui a été fait et pourquoi.
+Lis tous les commits git et résume ce qui a été fait et pourquoi.
 ```
 
 Cela permet à Claude de se remettre dans le contexte du travail récent avant de continuer.
