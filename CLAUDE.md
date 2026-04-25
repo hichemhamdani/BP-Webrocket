@@ -80,6 +80,27 @@ wp-content/
 
 ---
 
+## Reprendre le contexte après un clone ou une longue pause
+
+Claude lit ce fichier automatiquement, mais **ne lit pas l'historique Git tout seul**.
+Il connaît le contexte du projet (ce fichier), pas ce qui a changé récemment.
+
+Pour que Claude se remette dans le contexte des modifications passées, commencer la session par :
+
+```
+Lis les 20 derniers commits git et résume ce qui a été fait et pourquoi.
+```
+
+Ou pour une période précise :
+
+```
+Lis les commits depuis le [date] et dis-moi ce qui a changé dans le thème.
+```
+
+Claude fera un `git log` et lira les messages de commit pour reconstituer l'historique de travail.
+
+---
+
 ## Démarrer un nouveau projet depuis BP
 
 ```bash

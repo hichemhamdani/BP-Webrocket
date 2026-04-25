@@ -92,6 +92,18 @@ Pour démarrer une session :
 claude
 ```
 
+### Important : Claude ne lit pas l'historique Git automatiquement
+
+Claude connaît le contexte du projet via `CLAUDE.md`, mais il ne sait pas ce qui a été
+modifié dans les sessions précédentes. Si tu viens de cloner le projet ou de reprendre
+après une pause, commence ta session par cette commande :
+
+```
+Lis les 20 derniers commits git et résume ce qui a été fait et pourquoi.
+```
+
+Cela permet à Claude de se remettre dans le contexte du travail récent avant de continuer.
+
 ---
 
 ## Équipe
