@@ -192,6 +192,12 @@ Dans un terminal, utilise les credentials affichés dans Site Tools → Devs →
 ssh -p PORT -i C:\Users\TON_NOM\.ssh\webrocket_sg USERNAME@ssh.TONSITE.roxy.cloud
 ```
 
+> **Si tu as un timeout**, utilise directement le hostname du serveur à la place :
+> ```bash
+> ssh -p PORT -i C:\Users\TON_NOM\.ssh\webrocket_sg USERNAME@c113951.sgvps.net
+> ```
+> `ssh.TONSITE.roxy.cloud` peut ne pas encore être propagé dans le DNS si le domaine est récent.
+
 **9c. Vider la base et importer BP**
 
 Une fois connecté en SSH :
