@@ -1,4 +1,6 @@
-# HOW-TO — Créer un nouveau projet client depuis BP
+# Créer un nouveau projet client depuis BP
+
+> Tout ce qui est sous `hichemhamdani` changera en WR une fois tout testé et fonctionnel.
 
 Guide complet pour démarrer un nouveau site WordPress depuis le blueprint Webrocket.
 À suivre dans l'ordre, étape par étape.
@@ -16,9 +18,11 @@ Avant de commencer, tu dois avoir installé sur ton PC :
 - Accès au GitHub de Webrocket (`hichemhamdani`)
 - Accès au Site Tools du site SiteGround concerné
 
-Tu dois aussi avoir reçu de Hichem :
-- Le fichier `bp-starter.sql` (base de données de départ — trop gros pour Git, partagé en interne)
-- La clé privée SSH `webrocket_sg` (à placer dans `C:\Users\TON_NOM\.ssh\webrocket_sg`)
+Tu dois aussi avoir reçu de WR :
+
+- Le fichier `bp-starter.sql` (base de données de départ — trop gros pour Git, partagé en interne) : demander à Hichem
+- La clé privée SSH `webrocket_sg` (à placer dans `C:\Users\TON_NOM\.ssh\webrocket_sg`) : demander à Hichem
+- Le token GitHub `GH_TOKEN` : demander à Hichem
 
 ---
 
@@ -33,20 +37,12 @@ Tu dois aussi avoir reçu de Hichem :
 
 ---
 
-## Étape 2 — Cloner BP et le connecter au nouveau repo
+## Étape 2 — Cloner BP
 
 Ouvre un terminal et exécute :
 
 ```bash
-# Cloner BP depuis GitHub
 git clone https://github.com/hichemhamdani/BP-Webrocket.git dupont-webrocket
-cd dupont-webrocket
-
-# Pointer vers le nouveau repo GitHub du client
-git remote set-url origin https://github.com/hichemhamdani/dupont-webrocket.git
-
-# Pousser le code BP sur le nouveau repo
-git push -u origin main
 ```
 
 ---
@@ -72,6 +68,16 @@ Local a créé un dossier vide pour ton site. Tu dois y mettre les fichiers du p
 2. Ouvrir le dossier `app/public/`
 3. **Supprimer tout son contenu** (c'est une installation WordPress vide de Local)
 4. **Copier-coller** à la place le contenu du dossier `dupont-webrocket/` cloné à l'étape 2
+5. Ouvrir un terminal dans `app/public/` et exécuter :
+
+```bash
+git init
+git remote add origin https://github.com/hichemhamdani/dupont-webrocket.git
+git add .
+git commit -m "Initial commit depuis BP-Webrocket"
+git branch -M main
+git push -u origin main
+```
 
 ---
 
@@ -96,31 +102,56 @@ $table_prefix = 'yqj_';
 
 ---
 
-## Étape 6 — Importer la base de données en local
+## Étape 6 — Vider et importer la base de données en local
 
-1. Dans Local, cliquer **Open AdminNeo** (ou **Open site** puis aller sur `dupont.local/adminer`)
-2. Se connecter (les credentials sont pré-remplis)
-3. Sélectionner la base `local` dans le menu de gauche
-4. Cliquer sur l'onglet **Import**
-5. Charger le fichier `bp-starter.sql` (reçu de Hichem)
-6. Cliquer **Execute**
+**6a. Vider la base existante**
 
-L'import peut prendre quelques minutes.
+Dans Local, clic droit sur le site → **Open site shell**, puis :
+
+```bash
+mysql -u root -proot -e "DROP DATABASE local; CREATE DATABASE local;"
+```
+
+Vérifie dans AdminNeo que tout a bien été supprimé.
+
+**6b. Importer la base BP**
+
+Toujours dans le site shell :
+
+```bash
+mysql -u root -proot local < "C:\Users\TON_NOM\Downloads\bp-starter.sql"
+```
+
+Remplacer `TON_NOM` par ton nom de session Windows (ex : `hamda`).
+
+L'import peut prendre quelques minutes — attends que le prompt revienne avant de continuer.
 
 ---
 
 ## Étape 7 — Mettre à jour les URLs en local
 
-Une fois l'import terminé, les URLs dans la base pointent encore vers `bp.local`.
-Il faut les mettre à jour pour ton nouveau domaine local.
+Dans AdminNeo → onglet **SQL**, commence par vérifier vers où pointent les URLs :
 
-Dans AdminNeo, aller dans l'onglet **SQL** et exécuter :
+```sql
+SELECT option_name, option_value FROM yqj_options WHERE option_name IN ('siteurl', 'home');
+```
+
+Tu verras un résultat du type :
+
+| option_name | option_value |
+|-------------|--------------|
+| home | http://hich2.local |
+| siteurl | http://hich2.local |
+
+Remplace l'ancienne URL par celle de ton nouveau site local :
 
 ```sql
 UPDATE yqj_options
-SET option_value = REPLACE(option_value, 'bp.local', 'dupont.local')
+SET option_value = REPLACE(option_value, 'hich2.local', 'dupont.local')
 WHERE option_name IN ('siteurl', 'home');
 ```
+
+> **Note** : remplace `hich2.local` par ce que tu as vu dans le SELECT, et `dupont.local` par le domaine de ton nouveau site.
 
 Ça doit retourner **2 lignes modifiées**.
 
@@ -130,84 +161,108 @@ WHERE option_name IN ('siteurl', 'home');
 
 1. Dans Local, cliquer **Open site** → `dupont.local` doit s'afficher dans le navigateur
 2. Aller sur `dupont.local/wp-admin`
-3. Se connecter avec les credentials de la base BP (les mêmes que bp.local)
+3. Se connecter avec les credentials de la base BP
 
 Si tu vois le site et l'admin → tout est bon, tu peux passer à la configuration SiteGround.
+
+> **Si tu n'as pas les credentials**, réinitialise le mot de passe via AdminNeo :
+> ```sql
+> UPDATE yqj_users
+> SET user_pass = MD5('nouveaumotdepasse')
+> WHERE user_login = 'admin';
+> ```
 
 ---
 
 ## Étape 9 — Configurer le site sur SiteGround
 
-### 9a. Créer la base de données sur SiteGround
+**9a. Créer l'instance et installer WordPress**
 
-1. Aller dans **Site Tools** du site SiteGround → **MySQL** → **Databases**
-2. Créer une nouvelle base de données → noter son nom (ex : `dbok8fy3dd7meg`)
-3. Aller dans **MySQL** → **Users** → noter le nom d'utilisateur et son mot de passe
+1. Créer une instance sur SiteGround et installer WordPress
+2. Aller dans **Site Tools** → **Devs** → **SSH** → créer un utilisateur SSH
+3. Aller dans **Devs** → **SSH Keys Manager** → **Create/Import** → **Import**
+4. Coller la clé publique `webrocket_sg` (demander à Hichem)
+5. Cliquer **Authorize**
 
-### 9b. Initialiser Git sur SiteGround (une seule fois)
+**9b. Se connecter en SSH**
 
-Se connecter en SSH (les credentials SSH sont dans Site Tools → **Devs** → **SSH**) :
+Dans un terminal, utilise les credentials affichés dans Site Tools → Devs → SSH :
 
 ```bash
-ssh -p PORT USERNAME@HOSTNAME
-cd /home/customer/www/dupont.roxy.cloud/public_html
+ssh -p PORT -i C:\Users\TON_NOM\.ssh\webrocket_sg USERNAME@ssh.TONSITE.roxy.cloud
+```
+
+**9c. Vider la base et importer BP**
+
+Une fois connecté en SSH :
+
+```bash
+# Voir les bases disponibles (noter le nom de la base)
+mysql -u NOM_USER_DB -p -e "SHOW DATABASES;"
+
+# Vider la base
+mysql -u NOM_USER_DB -p -e "DROP DATABASE NOM_DB; CREATE DATABASE NOM_DB;"
+```
+
+Uploader `bp-starter.sql.gz` via **FileZilla** (SFTP) à côté de `public_html`, puis importer :
+
+```bash
+# Naviguer jusqu'au dossier contenant le fichier
+cd ~/www/TONSITE.roxy.cloud/
+
+# Vérifier que le fichier est là
+ls
+
+# Importer
+zcat bp-starter.sql.gz | mysql -u NOM_USER_DB -p NOM_DB
+```
+
+**9d. Initialiser Git sur SiteGround**
+
+```bash
+cd ~/www/TONSITE.roxy.cloud/public_html
 git init
 git remote add origin https://hichemhamdani:GH_TOKEN@github.com/hichemhamdani/dupont-webrocket.git
-git fetch origin dev
-git reset --hard origin/dev
+git fetch origin main
+git reset --hard origin/main
 ```
 
-Remplacer `GH_TOKEN` par le token GitHub (demander à Hichem).
+**9e. Corriger le table_prefix dans wp-config.php**
 
-### 9c. Créer le wp-config.php sur SiteGround
-
-Toujours en SSH, exécuter ces commandes une par une :
+SiteGround génère un préfixe de table aléatoire (ex : `rle_`). Il faut le remplacer par `yqj_`.
 
 ```bash
-cp /home/customer/www/dupont.roxy.cloud/public_html/wp-config-sample.php \
-   /home/customer/www/dupont.roxy.cloud/public_html/wp-config.php
-
-sed -i "s/database_name_here/NOM_DE_LA_DB/" /home/customer/www/dupont.roxy.cloud/public_html/wp-config.php
-sed -i "s/username_here/NOM_UTILISATEUR_DB/" /home/customer/www/dupont.roxy.cloud/public_html/wp-config.php
-sed -i "s/\$table_prefix = 'wp_';/\$table_prefix = 'yqj_';/" /home/customer/www/dupont.roxy.cloud/public_html/wp-config.php
+# Voir le préfixe actuel
+grep table_prefix wp-config.php
 ```
 
-Pour le mot de passe (utiliser Python si le mot de passe contient des caractères spéciaux) :
+Puis remplacer (adapte `rle_` par ce que tu vois) :
 
 ```bash
 python3 -c "
-content = open('/home/customer/www/dupont.roxy.cloud/public_html/wp-config.php').read()
-content = content.replace('password_here', 'MOT_DE_PASSE_DB')
-open('/home/customer/www/dupont.roxy.cloud/public_html/wp-config.php', 'w').write(content)
+content = open('wp-config.php').read()
+content = content.replace(\"'rle_'\", \"'yqj_'\")
+open('wp-config.php', 'w').write(content)
 print('OK')
 "
 ```
 
-> **Note** : sur SiteGround, `DB_HOST` reste `localhost` (contrairement à Local).
+> **Pourquoi ?** Sans ça, WordPress cherche les tables avec le mauvais préfixe et affiche
+> "Error establishing a database connection" même si la base est correctement importée.
 
-### 9d. Importer la base de données sur SiteGround
+**9f. Mettre à jour les URLs sur SiteGround**
 
-phpMyAdmin limite les imports à 256 Mo — pour un gros fichier, passer par SFTP + SSH.
+Dans phpMyAdmin → sélectionner la base → onglet **SQL** :
 
-**Via FileZilla (SFTP) :**
-1. Ouvrir FileZilla
-2. Se connecter avec les credentials SSH (Host, Username, Password, Port)
-3. Uploader `bp-starter.sql.gz` dans `/home/customer/www/dupont.roxy.cloud/`
-
-**Via SSH, importer :**
-```bash
-zcat /home/customer/www/dupont.roxy.cloud/bp-starter.sql.gz | mysql -u NOM_UTILISATEUR_DB -p NOM_DE_LA_DB
+```sql
+SELECT option_name, option_value FROM yqj_options WHERE option_name IN ('siteurl', 'home');
 ```
 
-Il demandera le mot de passe DB.
-
-### 9e. Mettre à jour les URLs sur SiteGround
-
-Dans phpMyAdmin de SiteGround → sélectionner la base → onglet **SQL** :
+Puis mettre à jour (remplace l'ancienne URL par le domaine SiteGround) :
 
 ```sql
 UPDATE yqj_options
-SET option_value = REPLACE(option_value, 'bp.local', 'dupont.roxy.cloud')
+SET option_value = REPLACE(option_value, 'LANCIENNE_URL', 'dupont.roxy.cloud')
 WHERE option_name IN ('siteurl', 'home');
 ```
 
@@ -215,38 +270,28 @@ WHERE option_name IN ('siteurl', 'home');
 
 ## Étape 10 — Configurer le déploiement automatique GitHub Actions
 
-### 10a. Autoriser la clé SSH webrocket_sg sur SiteGround
+**10a. Mettre à jour deploy.yml**
 
-> **Important** : sur SiteGround, les clés SSH sont par site. Même si tu as déjà autorisé
-> cette clé sur un autre site, tu dois la réautoriser pour chaque nouveau site.
-
-1. Aller dans **Site Tools** du nouveau site → **Devs** → **SSH Keys Manager**
-2. Cliquer **Create/Import** → **Import**
-3. Coller le contenu de `webrocket_sg.pub` (la clé publique)
-4. Cliquer **Authorize**
-
-### 10b. Mettre à jour deploy.yml
-
-Dans le dossier du projet, ouvrir `.github/workflows/deploy.yml` et remplacer `NOM-DU-REPO` par le vrai nom du repo :
+Dans le projet, ouvrir `.github/workflows/deploy.yml` et remplacer `NOM-DU-REPO` par le vrai nom du repo. Adapter aussi la branche (`main` ou `dev` selon ton workflow) :
 
 ```yaml
-git pull https://hichemhamdani:${{ secrets.GH_TOKEN }}@github.com/hichemhamdani/dupont-webrocket.git dev
+git pull https://hichemhamdani:${{ secrets.GH_TOKEN }}@github.com/hichemhamdani/dupont-webrocket.git main
 ```
 
-### 10c. Ajouter les secrets GitHub
+**10b. Ajouter les secrets GitHub**
 
-Sur GitHub → repo du projet → **Settings** → **Secrets and variables** → **Actions** → **New repository secret** :
+Sur GitHub → repo → **Settings** → **Secrets and variables** → **Actions** :
 
 | Secret | Valeur |
 |--------|--------|
-| `SSH_HOST` | `c113951.sgvps.net` (le hostname SiteGround) |
+| `SSH_HOST` | Hostname SiteGround (dans Site Tools → Devs → SSH) |
 | `SSH_USERNAME` | Username SSH du site SiteGround |
-| `SSH_PORT` | Port SSH (dans Site Tools → Devs → SSH) |
-| `SSH_PATH` | `/home/customer/www/dupont.roxy.cloud/public_html` |
+| `SSH_PORT` | Port SSH (généralement `18765`) |
+| `SSH_PATH` | `/home/USERNAME/www/TONSITE.roxy.cloud/public_html` |
 | `SSH_PRIVATE_KEY` | Contenu de `C:\Users\TON_NOM\.ssh\webrocket_sg` |
 | `GH_TOKEN` | Token GitHub (demander à Hichem) |
 
-> **Erreur courante pour SSH_PRIVATE_KEY** : copier la clé avec PowerShell pour éviter
+> **Erreur courante pour `SSH_PRIVATE_KEY`** : copier la clé avec PowerShell pour éviter
 > les problèmes de fins de ligne Windows :
 > ```powershell
 > Get-Content "C:\Users\TON_NOM\.ssh\webrocket_sg" -Raw | Set-Clipboard
@@ -258,12 +303,12 @@ Sur GitHub → repo du projet → **Settings** → **Secrets and variables** →
 ## Étape 11 — Tester le déploiement automatique
 
 1. Faire une modification dans un fichier du thème en local
-2. Commiter et pusher sur `dev` :
+2. Commiter et pusher :
 
 ```bash
 git add .
 git commit -m "Test déploiement"
-git push origin dev
+git push origin main
 ```
 
 3. Aller sur GitHub → onglet **Actions** → vérifier que le workflow devient vert
@@ -276,10 +321,10 @@ git push origin dev
 | Erreur | Cause | Solution |
 |--------|-------|----------|
 | `Error establishing a database connection` en local | `DB_HOST = localhost` | Utiliser `127.0.0.1:PORT` (port dans Local → Database) |
-| `Error establishing a database connection` sur SiteGround | `wp-config.php` absent ou mauvais credentials | Vérifier le wp-config.php via SSH |
-| `0 lignes modifiées` dans la requête SQL des URLs | Les URLs pointent vers un autre domaine | Vérifier avec `SELECT option_value FROM yqj_options WHERE option_name = 'siteurl'` |
+| `Error establishing a database connection` sur SiteGround | Mauvais `table_prefix` ou credentials incorrects | Vérifier avec `grep table_prefix wp-config.php` via SSH |
+| `0 lignes modifiées` dans la requête SQL des URLs | Les URLs pointent vers un autre domaine | Vérifier d'abord avec `SELECT option_value FROM yqj_options WHERE option_name = 'siteurl'` |
 | `ssh: no key found` dans GitHub Actions | Clé copiée avec mauvaises fins de ligne | Copier avec PowerShell : `Get-Content ... -Raw \| Set-Clipboard` |
-| `504 Gateway Timeout` sur import phpMyAdmin | Fichier trop gros | Passer par SFTP + import SSH |
+| `504 Gateway Timeout` sur import phpMyAdmin | Fichier trop gros | Passer par FileZilla (SFTP) + import SSH |
 | `Permission denied` SSH SiteGround | Clé pas autorisée sur ce site | Importer la clé publique dans Site Tools → SSH Keys Manager |
 
 ---
