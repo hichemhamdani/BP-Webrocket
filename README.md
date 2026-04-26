@@ -48,6 +48,32 @@ Ensuite :
 
 ---
 
+## Importer la base de données de départ
+
+La base fait plus de 1 Go — elle n'est pas dans Git. Elle est partagée en interne (demande le lien à Hichem).
+
+**Étapes (à faire une fois après le clone) :**
+
+1. Créer le site dans **Local by Flywheel** → noter le port MySQL affiché dans l'onglet Database
+2. Ouvrir **AdminNeo** depuis Local → sélectionner la base `local`
+3. Importer le fichier `bp-starter.sql` (menu Import)
+4. Créer `wp-config.php` depuis `wp-config-sample.php` avec tes credentials locaux :
+   - `DB_HOST` → `127.0.0.1:TON_PORT` (le port MySQL de ton site Local)
+   - `DB_NAME` → `local`
+   - `DB_USER` / `DB_PASSWORD` → `root` / `root`
+   - `$table_prefix` → `yqj_` (le préfixe des tables importées)
+5. Mettre à jour les URLs dans AdminNeo :
+   ```sql
+   UPDATE yqj_options
+   SET option_value = REPLACE(option_value, 'bp.local', 'monsite.local')
+   WHERE option_name IN ('siteurl', 'home');
+   ```
+
+> **Pourquoi cette approche ?** Chaque dev a sa propre copie isolée de la DB.
+> Si bp.local est éteint, ton site continue de fonctionner.
+
+---
+
 ## Déploiement automatique sur SiteGround
 
 Ce blueprint inclut un GitHub Action (`deploy.yml`) qui déploie automatiquement
