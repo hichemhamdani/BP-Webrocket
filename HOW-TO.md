@@ -268,7 +268,21 @@ WHERE option_name IN ('siteurl', 'home');
 
 ---
 
-## Étape 10 — Configurer le déploiement automatique GitHub Actions
+## Étape 10 — Transférer les médias sur SiteGround
+
+Les images et médias ne sont pas dans Git (trop lourds). Il faut les transférer manuellement une fois via FileZilla.
+
+1. Ouvrir **FileZilla** et se connecter en SFTP avec les credentials SSH du site
+2. À gauche (local) : naviguer vers `C:\Users\TON_NOM\Local Sites\bp\app\public\wp-content\uploads\`
+3. À droite (serveur) : naviguer vers `/home/USERNAME/www/TONSITE.roxy.cloud/public_html/wp-content/uploads/`
+4. Sélectionner tout le contenu du dossier local et le glisser vers le serveur
+
+> Ce transfert est unique — les nouveaux médias ajoutés via l'admin WordPress seront ensuite directement sur le serveur.
+
+---
+
+## Étape 11 — Configurer le déploiement automatique GitHub Actions
+
 
 **10a. Mettre à jour deploy.yml**
 
@@ -300,7 +314,7 @@ Sur GitHub → repo → **Settings** → **Secrets and variables** → **Actions
 
 ---
 
-## Étape 11 — Tester le déploiement automatique
+## Étape 12 — Tester le déploiement automatique
 
 1. Faire une modification dans un fichier du thème en local
 2. Commiter et pusher :
